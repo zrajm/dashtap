@@ -1,6 +1,6 @@
 # -*- sh -*-
 # Copyright (C) 2015 zrajm <fix@zrajm.org>
-# Licensed under GNU GPL version 3+, see LICENSE.txt for details.
+# Licensed under GNU GPL version 2, see LICENSE-GPL2.txt for details.
 
 ## DASHTAP
 ## =======
