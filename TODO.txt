@@ -1,834 +1,262 @@
 -*- org -*-
 
 * Program
-** TODO Milestone: Version 0.14 - 'Aliases' ------------------------- :v0_14:
-   + One should be able to define aliases in the config file, so that, for
-     example, `fix all` can be used to build all targets.
-   + There should be a default alias, which should work for the plain 'fix'
-     (without any arguments).
-** TODO Add 'default' buildscripts
-   When building a target Fix first looks for a buildscript with the same name
-   as the target (plus the `.fix` extension, and in the scriptdir), if no
-   buildscript is found by that name, Fix will instead look for a buildscript
-   `default` with the same file extension as the target, if this to fail, Fix
-   will try the process again in the parent directory, all the way up to the
-   worktree root dir.
+** TODO Prefix internal dashtap functions with common string ('dt_'?)
+   Ran into problems with seteval() when Fix.sh had a similar but different
+   implementation of the same thing. Dashtap function should probably be called
+   dt_seteval() or somesuch to avoid this.
 
-   That is, assuming your currently in the worktree root and execute the
-   following command:
+   The test functions pass(), fail(), ok(), is() etc. should retain their
+   current names however (to retain test file readability).
+** TODO is_same_env() fails on multi-line values
+   If a any variable in the environment contain a newline, then all bets are
+   off and is_same_env() WILL fail in unpredictable ways.
 
-       fix hello/world.tar.gz
+   The easiest fix for this would be keep a small history and make sure that
+   for every value `[ "$PREV" \< "$CURR" ]` is always true, and die() if this
+   is not the case. This wouldn't solve the actual problem, but clue in the
+   user as to the fact that something is wrong, rather than die silently.
+** TODO Create is_in_env() function
+   Should allow one to compare multiple variables at once (so that envdump file
+   only has to be loaded once), so that one can write something like this:
 
-   Fix would look for the following buildscripts, in order, and use the first
-   one found.
+       is_in_env \
+           "FIX_SCRIPT_DIR=/env1" "\$FIX_SCRIPT_DIR should not be changed" \
+           "FIX_SOURCE_DIR=/env2" "\$FIX_SOURCE_DIR should not be changed" \
+           "FIX_TARGET_DIR=/env3" "\$FIX_TARGET_DIR should not be changed"
 
-       + hello/world.tar.gz.fix
-       + hello/default.tar.gz.fix
-       + hello/default.gz.fix
-       + hello/default.fix
-       + [world.tar.gz.fix] <-- Yes/no? Should this be in here?
-       + default.tar.gz.fix
-       + default.gz.fix
-       + default.fix
+   Instead of the current:
 
-   If an earlier buildscript, that was previously missing, suddenly appear in a
-   later rebuild, then the target will be considered dirty and be rebuilt, in
-   the same way it would if its buildscript (or any other dependency) had been
-   rebuilt.
+       seteval + ENV stdin <"env2.txt"
+       like "$ENV" "${NL}FIX_SCRIPT_DIR='/env1'$NL" "\$FIX_SCRIPT_DIR should not be changed"
+       like "$ENV" "${NL}FIX_SOURCE_DIR='/env2'$NL" "\$FIX_SOURCE_DIR should not be changed"
+       like "$ENV" "${NL}FIX_TARGET_DIR='/env3'$NL" "\$FIX_TARGET_DIR should not be changed"
 
-   See also: https://cr.yp.to/redo/honest-nonfile.html
-** TODO Don't die on non-existing 'src' dir unless necessary.
-   Currently Fix will die if no source directory exists, even when no source
-   directory is needed. Fix should only die with this error message if the
-   source directory is actually *used* by any of the buildscripts. when using
+   Error output should not contain a whole dump of the environment, but instead
+   just show the actual value, or alert that it's unset.
 
-   Error message: "ERROR: Source dir 'src' does not exist"
-** TODO Absolute paths for script, source and target(?)
-   What should that mean? Should root mean Fix root, or the system root? Should
-   relative paths be relative to Fix root, or to the current user directory?
-** TODO Pass more arguments to buildscripts(?)
-   Fix passes:
+   `t/unit-load-config.t` could use some TLC when this is in place.
+** TODO Functions that read stdin shouldn't test stdin to determine when
+   Functions that read standard input should not determine whether or not to
+   read it by testing whether there is anything to read. Instead some other
+   factor (e.g. number of args) should be used to determine whether or not to
+   read it, and then give an error if there was nothing to read. (This to avoid
+   that nested functions all reading from standard input interfere with each
+   other; using e.g. 'diag "SOMETHING" <&-' to stop this is too easy to
+   forget.)
+*** TODO 'indent'
+    Only called from inside 'dashtap.sh', and never using stdin.
+*** TODO 'note' (and thereby 'diag')
+*** TODO 'setread'
+*** TODO 'write_file'
+*** DONE 'match'
+*** DONE 'execute'
+    CLOSED: [2014-07-22 Tue 14:29]
+** TODO Is 'file_is' failure diagnostic good enough?
+   'file_is' simply calls 'is', which means that the file name is not included
+   in the diagnostics -- it probably should be.
+** TODO Is 'file_is', 'is_changed' and 'is_unchanged' fail good enough?
+   What kind of fail message do we get if the file is missing? They all output
+   the same thing, which means that these tests cannot be distinguished on the
+   diagnostics output alone. :/
+** TODO Rewrite 'descr' so as to not use $(...)
+   Instead of calling as:
 
-     + `$1` - name of tempfile that stdout is connected to
+       local XX=$(descr SKIP "$1")
 
-   While the djb's original Redo pass the following:
+   it should maybe be called as:
 
-     + `$1` - foo.o (target name)
-     + `$2` - foo (target name without suffix)
-     + `$3` - whatever.tmp (tempfile name)
+       local XX="$1"
+       descr XX SKIP
 
-   Maybe `$FIX_SCRIPT_DIR`, `$FIX_SOURCE_DIR` and/or `$FIX_TARGET_DIR` should
-   be passed as arguments to the buildscript?
+   or somesuch.
+** TODO Eliminate as many $(...) as possible
+   Each $(...) starts a subshell, which is inefficient, this should be avoided
+   whenever possible.
 
-   If the passed filenames are relative, they should always start with `./` or
-   `../` (so that filenames beginning with `-` are always handled correctly by
-   tools invoked from inside the buildscript.)
-** TODO Buildscript should not run at all if target is unchanged
-   Currently new target built into a tempfile, and existing target will never
-   be overwritten unless the new target has been updated. But the new target
-   does not ever have to be built if we know no changes has been made to any of
-   the dependencies.
-
-   When building a target for the second time, the buildscript should not be
-   executed at all if neither the target, nor any of the dependencies has
-   changed.
-
-   + Add a test case for this. (E.g. by using a buildscript that writes to
-     standard error, and having a test case that detect that nothing is
-     outputted when the script isn't run.)
-** TODO Build output (without colors)
-   Some sorta status output for each built target, with indentation so that one
-   can see what's going on as the build progresses. `--quiet` option to silence
-   this output.
-
-   Apenwarr's redo has a nice output where each level is indented one step, but
-   each start with the word `redo`, so that one may simply copy/paste a line in
-   order to rebuild from there (neat when a problem has occurred). Do that?
-
-   This build output should without colors, or other fancy terminal stuff.
-   (That may be added later.)
-** TODO Dependencies
-** TODO Docs: Add man page
-** TODO Docs: Use Ronn for styling the docs?
-   https://rtomayko.github.io/ronn/ronn-format.7.html
-** TODO More thorough is_mother() tests
-   Should be able to detect an inconsistent state and abort. I.e. it should
-   check *all* parent/child variables, and return true/false if they're all set
-   or unset and abort with an error message if there's something inconsistent
-   about them.
-
-   If $FIX_LEVEL > 0 then error unless
-       FIX is set to executable file
-       PID is existing Fix process
-       FIX_LOCK exists and contains same PID as $FIX_PID
-       FIX_SCRIPT_DIR
-       FIX_SOURCE_DIR
-       FIX_TARGET_DIR
-       FIX_TARGET
-       FIX_PARENT
-** TODO Automatic unlocking of stale lockfile
-** TODO Proper signal handling
-   Nota bene: Rewrite trapping of lockfile so these traps do not clobber each
-   other.
-
-   [[http://www.cons.org/cracauer/sigint.html][Proper handling of SIGINT/SIGQUIT]] is an interesting on how to handle
-   signals. Under the headline "How to be a proper shell" there is a
-   description of what to do when catching a child signal, while wait()ing.
-
-   1. While waiting for child process, take note of any signal received.
-   2. Wait for child to exit, get exit status.
-   3. If signal any signal was received during wait:
-      1. Check whether child received one of the trapped signals: If so re-kill
-         yourself with the same signal (so that programs upstream can determine
-         that you received a signal).
-
-   [[http://mywiki.wooledge.org/SignalTrap][Sending and Trapping Signals]] says: There is a core set of signals common to
-   all Unix-like operating systems whose numbers realistically never change;
-   the most common of these are:
-
-   |------+----+--------------------------------------------------------|
-   | HUP  |  1 | Hang Up. The controlling terminal has gone away.       |
-   | INT  |  2 | Interrupt. The user has pressed Ctrl-C.                |
-   | QUIT |  3 | Quit. The user has pressed Ctrl-\. Exit and dump core. |
-   | KILL |  9 | Kill. Unconditionally fatal. No cleanup possible.      |
-   | TERM | 15 | Terminate. Default `kill` signal.                      |
-   |------+----+--------------------------------------------------------|
-** TODO Mother process should ignore $FIX_FORCE/$FIX_DEBUG, only use options
-   Reset $FIX_DEBUG and $FIX_FORCE (if set), and use only --debug and --force.
-   Child processes still need to listen to the environment variables, though.
-** TODO Option to output source file(?)
-   With this the buildscript itself wouldn't have to consider
-   `$FIX_SOURCE_DIR`, but could simply pipe the output of a `fix --cat FILE`
-   (or similar command) into the build process.
-
-   Have a `fix --cat FILE` command which registers FILE as a dependency, and
-   outputs the content of FILE on standard out?
-
-   A drawback might be that this could obscure where the dependency
-   declaration.
-
-       fix --cat index.txt | markdown2html
-
-   or
-
-       TEXT="$(fix --cat index.txt)"
-       echo "$TEXT" | markdown2html
-** TODO Add config file for default targets
-   Config file should be relative to `$FIX_WORK_TREE`.
-** TODO Docs: Small (but realistic) build example
-   Google 'sample makefile project' for a good starting point.
-
-   + Buildscript should contain lots of comments about how Fix works etc.
-   + This build example should be tested through the system tests.
-** TODO Options parsing should split bundled shortopts
-** TODO Handle comments in config files
-   Comments should be handled anywhere in a line (see 'git help config' and
-   search for 'comment' to see how it is handled there).
-** TODO Handle double quoted strings in config files
-   See 'git help config' for how its handled in Git. (It's very much like the
-   shell's way of handling stuff, concatenating multiple words and inserting
-   spaces.)
-
-   Currently `scriptdir`, `sourcedir` and `targetdir` names cannot contain
-   space (or any other kind of whitespace) because of this limitation.
-** TODO Listen to value of $FIX_DIR
-   $FIX_DIR should be settable in the invoking shell. When implemented, also
-   update docs on this (moving this from an 'internal variable' to
-   'environment'.
-** TODO Listen to value of $FIX_WORK_TREE
-   $FIX_WORK_TREE should be settable in the invoking shell. When implemented,
-   also update docs on this (moving this from an 'internal variable' to
-   'environment'.
-** TODO Rethink error handling?
-   Functions like save_config() and read_stdin() should maybe fail by returning
-   a non-zero exit status, rather than invoking die()?
-** TODO Error when buildscript output both to stdout AND tempfile?
-   Could be solved by having the tempfile name given to buildscript as arg `$1`
-   be a different name that the file its stdout is connected to.
-
-   Fix could then check to see that the stdout file is zero in length, if the
-   secondary tempfile exists after the buildscript has run, and die with an
-   appropriate error message if this is not the case.
-
-       TARGET--fixtmp   # `$1` file
-       TARGET--fixout   # stdout file
-* System tests
-** TODO Test unsetting of CDPATH
-** TODO Version test should work in detached head state
-   Currently, if one checks out a commit older that the last tagged commit this
-   test will fail. (It only looks at the latest tag in the repo, not the latest
-   tag at the time of the commit.)
-
-   Test name: t/a01-v-and-version-options.t
-** TODO Test that compiles are done/not done with incrementor(?)
-   Compiled file could be a number that is incremented by the 'compiling'
-   process, inspection of whether it's been compiled or not does not have to
-   depend on timestamp.
-** TODO Always error when using `--source` outside buildscript
-   Even if there's no TARGET given, this should always result in the error
-   message:
-
-       ERROR: Option '--source' can only be used inside buildscript
-
-   See test case: c07-using-source-option-outside-buildscript.t
-** TODO Test building from inside subdir
-** TODO Test `--init` option
-   Including error message when attempting to reinitialize already initialized
-   work tree.
-** TODO Error message paths when invoked from subdir
-** TODO Passing in environment variables as options
-   Internal variables should be reset by mother process, and not affect how Fix
-   will run if set in the invoking shell. Modifying any of these in a
-   buildscript will confuse Fix (so don't do that!)
-*** TODO $OPT_INIT       -- INTERNAL
-*** TODO $OPT_SOURCE     -- INTERNAL
-*** TODO $FIX_DEBUG      -- boolean
-*** TODO $FIX_DIR        -- INTERNAL (open up later on)
-*** TODO $FIX_FORCE      -- boolean
-*** TODO $FIX_LEVEL      -- INTERNAL
-*** TODO $FIX_LOCK       -- INTERNAL
-*** TODO $FIX_PID        -- INTERNAL
-*** TODO $FIX_PWD        -- INTERNAL
-*** TODO $FIX_SCRIPT_DIR -- path relative worktree root
-*** TODO $FIX_SOURCE_DIR -- path relative worktree root
-*** TODO $FIX_TARGET     -- INTERNAL
-*** TODO $FIX_TARGET_DIR -- path relative worktree root
-*** TODO $FIX_WORK_TREE  -- INTERNAL (open up later on)
-** TODO Test setting of $PATH
-   Also make sure that subdependencies do not get the leading `$PATH` directory
-   added multiple times.
-** TODO Rewrite mkmetadata to accept one argument + rewrite tests
-   TYPE:FILE, instead of those as two separate arguments.
-** TODO Create dep -> dep -> dep test with modified buildscript for leaf dep
-   When building a dep1 -> dep2 -> dep3 chain, see that if dep3 has a modified
-   buildscript that produces the same output, none of targets should be
-   overwritten, but remain exactly as they are.
-** TODO Tests for reading of command line arguments
-** TODO Add test for --debug (and -D) option
-** TODO Add test for --force (and -f) option
-** TODO Add test for --help (and -h) option
-** TODO Remove test case dependency on pre-configured dir
-   Each test should instead write all the files they need explicitly (including
-   timestamps) in the test itself (making each test file self contained).
-
-   This also simplifies renaming of tests, since there will no longer be any
-   symlinks that point to a non-existing directory after that directory has
-   been renamed.
-** TODO Make tests uniform
-   Tests should be as uniform as possible to be easily diff:able.
-** TODO Test cases should describe outcome of test explicitly
-   The test case descriptions should be rephrased to use the word 'should'.
-
-   + 'e09-rebuild-dep-target-modified.t' is an example of this.
-** TODO Remove TODO tests in all `t/e*sourcedep*.t` tests
-** TODO t/e*sourcedep*.t test cases need to look at dependency data     :NOW:
-   (they now *pass* even though FIX_SOURCE doesn't do anything!)
-** TODO 'test_init' should set state dir root
-   '.fix/state' is the current state dir root, this should be exported in a
-   variable from test_init so we won't have to change it in a hundred different
-   test files if it ever changes.
-** TODO Mooooaaar test cases!
-** TODO Restructure tests
-   Want separate directories for the various tests:
-   + Dashtap tests
-   + Fix system tests
-   + Fix unit tests
-** TODO Profiling the code (using Devel::NYTProf)
-** TODO Test code coverage (Devel::Cover)
-** TODO BUGFIX: Deptarget saves metadata twice
-   Example `t/g04-build-targetdep.t`
-
-       # fix.sh TARGET --debug
-       build/DEPTARGET: Target unchanged, keep old target
-       build/DEPTARGET: Writing metadata for 'TARGET'
-       build/DEPTARGET: Writing metadata for 'TARGET'
-       build/TARGET: Target unchanged, keep old target
-       build/TARGET: Writing metadata
-* FUTURE
-** TODO Child/mother process communication through tempfiles(?)
-   Mother process could save its environment variables/settings in a file in
-   e.g. `.fix/tmp/<PID>.conf`, which would then be read by all the child
-   processes (rather that being read from the environment). This would protect
-   the variables from tampering by the buildscripts. (Good thing?)
-
-   The child processes could, in the same fashion, write their TARGET
-   dependency data into a tempfile (`.fix/tmp<PID>.meta` or somesuch) which
-   would be gathered into the final build metadata for that target by the
-   mother process.
-** TODO Outputting dependency graph
-   As a dotviz file?
-** TODO Support for listdeps
-   Tag certain dependencies as 'listing dependencies' (or listdeps) in Fix's
-   internal state. A listdep is a dependency, that lists (or defines) which
-   other dependencies. Whenever a listdep has changed we can no longer be sure
-   that the dependency graph is the same without first rebuilding the target
-   whose listdep(s) has changed.
-
-   If no listdeps has changed in the full dependency graph, then we still know
-   the exact shape of the graph, though we might still have to rebuild a couple
-   of files here or there.
-
-   All buildscripts are listdeps (and presumably there will be no other
-   listdeps but the buildscripts in most projects), but let's say that a
-   buildscript pulled in content from several files, which were all listed in a
-   file called `list.txt`. If `list.txt` were to change, the number of files
-   read by the buildscript would also change. Thus `list.txt` should be
-   declared as a listdep.
-** TODO Add support for newlines in filenames(?)
-   Could maybe use trailing backslash in filename to indicate line continuation
-   and newline?
-** [0%] Parallel builds
-*** TODO Make compatible job server?
-*** TODO Writing build metadata in parallel
-    When building with multiple targets, each target should build in parallel,
-    and each should write its build metadata to a separate file. E.g. invoking
-    `fix a.txt b.txt c.txt` from inside `above.txt.fix` should cause three
-    temporary build metadata files to be written (one for each argument):
-
-        above.txt--fixing.1      # tempfile of first target
-        above.txt--fixing.2      # .. second target
-        above.txt--fixing.3      # etc.
-
-    Upon finalizing the build these should be concatenated by fix before being
-    renamed to their permanent name, e.g. something like this:
-
-        cat above.txt--fixing.1 \
-            above.txt--fixing.2 \
-            above.txt--fixing.3 >above.txt--fixing
-        mv above.txt--fixing above.text
+   Could this be avoided in 'setread', for example?
+** TODO Separate docs from source code
+   Using Markdown?
+** TODO Separate Fix.sh test helper functions from Dashtap
+** TODO Put Dashtap in its own GitHub repo
+   This would have to be automatically cloned and built by the Fix.sh build
+   system. (Or at least have a very simple way of doing this described in the
+   README.)
+** TODO Merge 'is_changed' and 'is_unchanged' to follow DRY
+** TODO Make sure all error messages use 'error'
+* README
+  Include a introduction to how to use Dashtap in the README.
+* To think about
+** TODO Merge 'execute' and 'seteval'?
+* Testing
+** TODO Tests should use 'title'
+** TODO 'dashtap-todo.t' and 'dashtap-skip.t' should be very similar
+   Currently there is some testing of ' and " in one of them.
+** TODO Test 'dashtap_init'
+** TODO Test 'dashtap_exit'
+** TODO Test 'done_testing'
+** TODO Test 'skip_all'
+** TODO Test 'BAIL_OUT'
+** TODO Test 'diag'
+** TODO Test 'note'
+** TODO Test 'result'
+** TODO Test 'pass'
+** TODO Test 'fail'
+** TODO Test 'ok'
+** TODO Improve 'is' tests
+   FIXMEs in 'xt/dashtap-is.t' have more info
+** TODO Improve 'isnt' tests
+   FIXMEs in 'xt/dashtap-isnt.t' have more info
+** TODO Test 'file_is'
+** TODO Test 'file_exist'
+** TODO Test 'file_not_exist'
+** TODO Test 'timestamp'
+** TODO Test 'is_unchanged'
+** TODO Test 'init_test'
+** TODO Test 'mkpath'
+** TODO Test 'chtime'
+** TODO Test 'write_file'
+** TODO Test that each function is tested
+** TODO Test whether each function returns or exits
 * DONE
-** DONE Tests should be run in tempdir
-   CLOSED: [2014-07-07 Mon 00:28]
-** DONE BUGFIX: Eliminate name collision with lockfile
-   CLOSED: [2014-07-07 Mon 00:36]
-   Moved build state metadata into dir '.fix/state', while the lockfile
-   continues to be called 'lock.pid'.
-** DONE Tests which uses pre-defined metadata
-   CLOSED: [2014-07-07 Mon 09:11]
-   I.e. a whole bunch of tests are based on a state where a target has already
-   been built once. This should use stored metadata (which could be easily
-   re-built in case the metadata format changes).
-** DONE Clean up and systematize test scripts
-   CLOSED: [2014-07-11 Fri 21:19]
-   Descriptions in TESTS.txt as well as the scripts themselves.
-** DONE Eliminate need for 'sleep 1'
-   CLOSED: [2014-07-13 Sun 05:04]
-   Instead move timestamp backwards for all relevant files. (Is this really
-   needed, or covered by the current test cases?) Modify chtime function to
-   work for this.
+** DONE Test 'indent'
+   CLOSED: [2014-07-11 Fri 10:19]
+** DONE Test 'evalset'
+   CLOSED: [2014-07-11 Fri 13:22]
+** DONE Test 'error'
+   CLOSED: [2014-07-11 Fri 16:53]
+** DONE Add TODO tests
+   CLOSED: [2014-07-12 Sat 18:18]
+** DONE Change 'write_file' argument order
+   CLOSED: [2014-07-13 Sun 06:27]
+   Permission bits & date should come *before* filename (to be consistent with
+   touch and chmod).
+** DONE Add SKIP tests
+   CLOSED: [2014-07-17 Thu 19:49]
+** DONE Test 'TODO'
+   CLOSED: [2014-07-18 Fri 18:31]
+** DONE Test 'END_TODO'
+   CLOSED: [2014-07-18 Fri 18:31]
+** DONE 'execute' should use only one trap
+   CLOSED: [2014-07-20 Sun 09:10]
+   A simple echo should suffice to catch the 'FULL' case, instead of the trap
+   at the end of the 'execute' function.
+** DONE Test 'varname'
+   CLOSED: [2014-07-20 Sun 15:01]
+** DONE 'varname' should not allow empty string or '_'                  :BUG:
+   CLOSED: [2014-07-20 Sun 15:01]
+** DONE Added 'strip_newline' and modified 'seteval' to make use of it
+   CLOSED: [2014-07-20 Sun 18:38]
+** DONE Added test cases for 'strip_newline'
+   CLOSED: [2014-07-20 Sun 18:40]
+** DONE Add function 'setread VARNAME [+] [<FILE]'
+   CLOSED: [2014-07-20 Sun 19:32]
+   Should read standard input into variable named VARNAME (preserving all
+   whitespace). This function should be used by 'file_is', and 'execute'.
+** DONE 'execute' and 'file_is' now uses 'setread'
+   CLOSED: [2014-07-21 Mon 14:43]
+** DONE 'file_is' should only strip one trailing newline                :BUG:
+   CLOSED: [2014-07-21 Mon 15:01]
+   When this works, add test with two trailing newlines to
+   'dashtap-strip_newline.t' as well.
+** DONE Dashtap variables should have prefix DASHTAP_*
+   CLOSED: [2014-07-21 Mon 16:06]
+   Not TEST_* as they have now.
+** DONE No references to DASHTAP_* variables outside 'dashtap.sh' itself
+   CLOSED: [2014-07-21 Mon 16:06]
+   Added 'dashtap_init' which can be used to re-initialize the variables (e.g.
+   in author tests).
+** DONE Function to test if a function exists
+   CLOSED: [2014-07-21 Mon 22:02]
+** DONE Rename test functions '*_exist' -> '*_exists'
+   CLOSED: [2014-07-22 Tue 00:47]
+** WONT 'setread' should refuse pipe input
+   CLOSED: [2014-07-22 Tue 00:59]
+   We could use [ -p /dev/stdin ] in 'setread' to test whether was invoked in a
+   pipe or not. But stopping the user from doing this would backfire, since it
+   is sometimes desirable to use it in this way.
 
-   Test time went down from 14 seconds to 2 seconds (with 20 tests).
-** DONE Modified 'init_test' + added 'cpdir'
-   CLOSED: [2014-07-26 Sat 21:45]
-   'init_test' no longer helps in creating the directory structure of the
-   test's tempdir. Instead this has to be done manually (which simplifies
-   reading the test script, since you can immediately see which directories are
-   created).
+   E.g. if 'match' uses 'setread' to read its input from standard input, and
+   then match was invoked by `echo "$STR" | match "$SUBSTR"`, the pipe error
+   would abort match even though the only thing relevant here is the return
+   status of 'match'.
+** DONE Quote all <<"EOF" in test scripts
+   CLOSED: [2014-07-22 Tue 01:06]
+** DONE Test reading of stdin for 'match' function
+   CLOSED: [2014-07-22 Tue 01:43]
+** DONE Test 'execute'
+   CLOSED: [2014-07-22 Tue 14:26]
+** DONE 'setread' should support third string arg
+   CLOSED: [2014-07-22 Tue 19:27]
+   When this is added, also add a test to 'dashtap-setread.t' which test how
+   'setread' reacts to input that does not end in newline.
+** DONE 'title' -- Extra fail message
+   CLOSED: [2014-07-23 Wed 03:43]
+   Output as 'note' whenever it occurs, but also added as an extra fail message
+   that can be set by a command, which will be displayed only as a diagnostic
+   if there is a failure, and which is valid until it is reset.
 
-   Added help function 'cpdir' which simplifies copying the relevant data
-   directories from the test script data dir.
-** DONE Test scripts should use 'title'
-   CLOSED: [2014-07-25 Sun 00:19]
-** DONE Add test for descriptions in TESTS.txt
-   CLOSED: [2014-08-18 Mon 02:38]
-** DONE Support for SCRIPT|SOURCE|TAGET dirs in metadata
-   CLOSED: [2015-10-27 Tue 08:58]
-   Metadata now has a third word for each file, specifying whether the file is
-   a SCRIPT (*.fix) file, SOURCE file (dependency declared with `fix
-   --source`), or a TARGET file.
+   E.g. 'extra "TODO-related tests"' would add an extra line to the beginning
+   of the failure message, like this:
 
-   This distinction is maintained in order to allow there three different types
-   of files to be stored in different directories, and allowing the user to set
-   these directories between invocations.
-** DONE Test metadata contents
-   CLOSED: [2015-10-29 Thu 15:40]
-   Add a function to the end of 'dashtap.sh' which can create the expected
-   content for the metadata file, given the names of the files which should be
-   in there.
+       not ok 35 - Exit status
+       #   TODO-related tests
+       #   Failed test 'Exit status'
+       #   in 'xt/dashtap-todo.t'
+       #     GOT   : 255
+       #     WANTED: 1
+*** DONE 'seteval' argument change
+    CLOSED: [2014-07-22 Tue 21:17]
+    '+' should be first arg in parallel to 'setread'
+*** DONE 'setread' argument change
+    CLOSED: [2014-07-22 Tue 19:25]
+    '+' should be first arg, to allow for unambiguous 3rd argument.
+** DONE Test 'title'
+   CLOSED: [2014-07-23 Wed 03:48]
+** DONE Test 'end_title'
+   CLOSED: [2014-07-23 Wed 03:49]
+** DONE Test 'is'
+   CLOSED: [2014-07-26 Sat 18:26]
+** DONE Added 'isnt' function + tests
+   CLOSED: [2014-07-26 Sat 19:44]
+** DONE Fix space-in-filename problem with timestamps                   :BUG:
+   CLOSED: [2014-07-26 Sat 19:46]
+   'timestamp'/'is_changed'/'is_unchanged'
 
-   In (some of?) the failing cases we'll need to generate this before running
-   the actual tests.
-** DONE Build failure should terminate with exit status: 1
-   CLOSED: [2015-11-12 Thu 22:15]
-   Exit status 1 should be used for build errors (since it'll presumably be the
-   most common error).
-** DONE Kill invoking buildscript (if any) on error
-   CLOSED: [2015-11-12 Thu 22:26]
-** DONE Quote all variables
-   CLOSED: [2015-11-12 Thu 22:58]
-** DONE error() function should be called die()
-   CLOSED: [2015-11-12 Thu 23:23]
-** DONE Use `set -eu` "strict mode"
-   CLOSED: [2015-11-13 Fri 00:42]
-   Inspired by [[http://redsymbol.net/articles/unofficial-bash-strict-mode/][The Unofficial Bash Strict Mode]].
+** DONE Added 'reset_timestamp' function
+   CLOSED: [2014-07-26 Sat 19:46]
+   Plus related functions 'timestamp_file' and 'timestamp_time'.
+** WONT Should 'error' output be compatible with TAP?
+   CLOSED: [2014-07-27 Sun 22:22]
+   Currently 'error' just aborts and outputs something on stderr, but should it
+   also be prefixed with '# '?
 
-   `set -e` - Exit immediately if any untested command fails. The exit status
-   of a command is considered to be explicitly tested if the command is used to
-   control an `if`, `elif`, `while`, or `until`; or if the command is the left
-   hand operand of an `&&` or `||` operator.
+   -- No. Tests should only be evaluated by the test functions, because if an
+   error messages throw a test fail, the user will not have any control over
+   the test description string. (And TODO/SKIP etc. gets inherited -- not
+   acceptable.)
 
-   `set -u` - Write a message to standard error when attempting to expand a
-   variable that is not set, and exit immediately.
-** DONE Test $FIX_LEVEL and $FIX_PARENT environment variables
-   CLOSED: [2015-11-13 Fri 01:56]
-   Add a buncha testcases that look to see if buildscripts have the right
-   FIX_TARGET & FIX_PARENT, at start and further down the dependency tree
-** DONE $FIX_PARENT should be set
-   CLOSED: [2015-11-13 Fri 01:57]
-** DONE Parsing of options: --debug, --force and --source
-   CLOSED: [2015-11-13 Fri 08:32]
-   Initially add the following options: --debug, --force and --source.
-
-   No support added for options with arguments or bundled options. If support
-   for option arguments is later desired, here's some code I've been using
-   in other projects to achieve that:
-
-   COUNT="$#"
-   HELP="Try '$0 --help' for more information."
-   while [ "$COUNT" != 0 ]; do                    # read command line options
-       ARG="$1"; shift
-       case "$ARG" in                             # handle '--opt=ARG'
-           --[a-z]*=*)                            #   if has '=ARG' part
-               set -- "${ARG#*=}" "$@"            #     put ARG back into $@
-               ARG="${ARG%%=*}"                   #     strip off '=ARG' part
-               ARGED=has_arg ;;
-           *)  COUNT="$(( COUNT - 1 ))"
-               ARGED=no_arg ;;
-       esac
-       case "$ARG" in
-           --opt-with-arg) FIX_DEBUG=1  ; ARGED=used ;;
-           -D|--debug) FIX_DEBUG=1  ;;
-           -f|--force) FIX_FORCE=1  ;;
-           --source)   OPT_SOURCE=1 ;;
-           --) while [ "$COUNT" != 0 ]; do        #   put remaining args
-                   set -- "$@" "$1"               #     last in $@
-                   COUNT="$(( COUNT - 1 ))"
-               done; break ;;                     #     and abort
-           -*) die 15 "Unknown option '$ARG'" "$HELP" ;;
-           *)  set -- "$@" "$ARG" ;;              #   put non-option arg back
-       esac
-       case "$ARGED" in
-           has_arg) die "Option '$ARG' doesn't allow an argument" "$HELP" ;;
-           used)
-               [ "$#" = 0 ] && die "Option '$ARG' requires an argument" "$HELP"
-               COUNT="$(( COUNT - 1 ))"
-               shift ;;
-       esac
-   done
-   unset COUNT ARG ARGED HELP
-** DONE Add --help option
-   CLOSED: [2015-11-13 Fri 16:21]
-** DONE Add --version option
-   CLOSED: [2015-11-13 Fri 16:36]
-** DONE Find decent software license to use
-   CLOSED: [2015-11-13 Fri 16:31]
-   Settled on GPLv3 after reading GitHub's http://choosealicense.com/.
-
-   I want a license that:
-
-   + Require that I'm credited.
-   + Allow people to make derivative work (which may be used for commercial
-     purposes).
-   + Require that derivative work are also freely available and use the same
-     license.
-
-   For non-code I usually use [[https://creativecommons.org/licenses/by-sa/3.0/][Creative Commons Attribution-ShareAlike]], and I
-   want something similar, but suitable for code. (Creative Commons themselves
-   recommend against using their licenses for code.)
-
-   See also:
-   + [[https://wiki.creativecommons.org/wiki/Frequently_Asked_Questions#Can_I_use_a_Creative_Commons_license_for_software.3F][Creative Commons FAQ: Can I apply a Creative Commons license to software?]]
-** DONE Add version number to --version output + test case for that
-   CLOSED: [2015-11-16 Mon 11:38]
-   Fix's --version output at the time of implementation.
-
-       fix.sh (Fix) 0.10.5
-       Copyright (C) 2015 zrajm <fix@zrajm.org>
-       License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-       This is free software: you are free to change and redistribute it.
-       There is NO WARRANTY, to the extent permitted by law.
-
-       For the latest version, see <https://github.com/zrajm/fix.sh>.
-
-   + Version number follow "Semantic Versioning 2.0.0", described in
-     http://semver.org/ (June 17, 2013 update).
-
-   + Wording of the `--version` text follow "GNU Coding Standards", described
-     in https://www.gnu.org/prep/standards/html_node/_002d_002dversion.html
-     (April 23, 2015 update).
-
-   Relevant parts of the description from "GNU Coding Standards":
-
-   > The program's name should be a constant string; _don't_ compute it from
-   > `argv[0]`. The idea is to state the standard or canonical name for the
-   > program, not its file name. There are other ways to find out the precise
-   > file name where a command is found in `PATH`.
-   >
-   > If the program is a subsidiary part of a larger package, mention the
-   > package name in parentheses, like this:
-   >
-   >     emacsserver (GNU Emacs) 19.30
-
-   and
-
-   > The following line, after the version number line or lines, should be a
-   > copyright notice. If more than one copyright notice is called for, put
-   > each on a separate line.
-   >
-   > Next should follow a line stating the license, preferably using one of
-   > abbreviations below, and a brief statement that the program is free
-   > software, and that users are free to copy and change it. Also mention that
-   > there is no warranty, to the extent permitted by law. See recommended
-   > wording below.
-   >
-   > It is ok to finish the output with a list of the major authors of the
-   > program, as a way of giving credit.
-
-   and
-
-   > This copyright notice only needs to mention the most recent year in which
-   > changes were made---there's no need to list the years for previous
-   > versions' changes. You don't have to mention the name of the program in
-   > these notices, if that is inconvenient, since it appeared in the first
-   > line.
-
-   and
-
-   > Write the word "Copyright" exactly like that, in English. Do not translate
-   > it into another language. International treaties recognize the English
-   > word "Copyright"; translations into other languages do not have legal
-   > significance.
-** DONE Renamed license file to follow GitHub standard
-   CLOSED: [2015-11-16 Mon 18:11]
-   Renamed license file `COPYING.txt` -> `LICENSE.txt` to follow GitHub
-   standard repository layout:
-
-   See: [[https://help.github.com/articles/open-source-licensing/#where-does-the-license-live-on-my-repository][GitHub Help: Where does the license live on my repository?]]
-** DONE Write dependencies to tempfile, finalize when build is done
-   CLOSED: [2015-11-24 Tue 15:17]
-   Fixed in commit db8fe3b9aebffbe01e21a47541c9aa21b9dde600.
-** DONE Automatic adding of buildscript as target dependency
-   CLOSED: [2015-11-28 Sat 13:33]
-** DONE Never test timestamp on metadata files
-   CLOSED: [2015-11-28 Sat]
-   They are always overwritten, as it seems unnecessary (and unnecessarily
-   costly) to check whether newly written data is identical to previous data.
-** DONE Dependency: Save buildscript checksum even if producing same TARGET
-   CLOSED: [2015-11-28 Sat 22:29]
-   When buildscript has changed, but in such a way as to still produce the same
-   output as before (e.g. someone added a comment, blank line or similar to the
-   buildscript), we still need to write the metadata file. (Since the checksum
-   of the buildscript will be different, and we need to capture that.)
-
-   Fix this, and make sure test case
-   't/b06-rebuild-buildscript-modified-same-output.t' passes.
-** DONE "Metadata" test description should be "Target metadata"
-   CLOSED: [2015-11-29 Sun 17:08]
-** DONE Rename tests so that options related tests come first
-   CLOSED: [2015-11-29 Sun 18:00]
-** DONE `prove xt/` should work with $BAIL_ON_FAIL set
-   CLOSED: [2015-11-29 Sun 19:55]
-** DONE Test metadata file content everywhere
-   CLOSED: [2015-11-30 Mon 09:06]
-   Verified that this is already done in all tests.
-** DONE Test first line of metadata: It should be the target
-   CLOSED: [2015-11-30 Mon 09:23]
-** SKIP Test second line (if any) of metadata: It should be buildscript
-   CLOSED: [2015-11-30 Mon 13:34]
-   No need to test this. This is already specified in the metadata specs in the
-   tests.
-** DONE Check for non-existence of metadata tempfiles
-   CLOSED: [2015-11-30 Mon 13:53]
-** DONE Pass name of tempfile as argument to buildscript              :v0_11:
-   CLOSED: [2015-12-07 Mon 08:06]
-   Fix now passes:
-
-     + `$1` - name of tempfile that stdout is connected to
-** DONE BUGFIX: $FIX_FORCE/$FIX_DEBUG weren't exported
-   CLOSED: [2015-12-08 Tue 09:03]
-   Causing the --force and --debug options to not propagate into child
-   processes.
-** DONE Add source dependencies                                       :v0_11:
-   CLOSED: [2015-12-10 Thu 09:16]
-** DONE Milestone: Version 0.11 - Build simple project -------------- :v0_11:
-   CLOSED: [2015-12-10 Thu 09:17]
-** DONE Internal filenames look like 'TARGET:index.html' etc(?)
-   CLOSED: [2015-12-11 Fre 10:52]
-   Currently we pass around $TYPE + $FILE in a bunch of places, but maybe these
-   should be collected (and stored in the state files) as one string.
-
-   Test to see if this refactoring would simplify the code.
-** DONE Add `fix` executable to $PATH                                 :v0_12:
-   CLOSED: [2015-12-11 Fri 18:02]
-   Create `.fix/bin` directory, put that first in $PATH and add symlink to the
-   current executable? This should make it possible to invoke `fix.sh` as just
-   `fix` from inside the buildscripts.
-
-   * Removed `$FIX` variable.
-
-   * Prepend a directory to $PATH with a link to Fix (it is always called `fix`
-     (even for `fix.sh`) so that buildscripts always can invoke fix with the
-     same command.
-** DONE Directories should be absolute paths                          :v0_12:
-   CLOSED: [2015-12-14 Mon 19:19]
-   The following directory variables should all be re-written into absolute
-   paths by Fix early on, and these absolute paths is what then should be
-   passed down the dependency chain.
-
-     + $FIX_DIR
-     + $FIX_SCRIPT_DIR
-     + $FIX_SOURCE_DIR
-     + $FIX_TARGET_DIR
-** DONE BUGFIX: Always overwrite link to Fix in binpath
-   CLOSED: [2015-12-14 Mon 19:39]
-   The hardlink created in the `.fix/bin` directory (which is added to `$PATH`)
-   must be recreated every time, since Emacs (and probably other editors as
-   well) break the link, making the link point to an older version of Fix
-   instead of the current one.
-** DONE Added `--init` option
-   CLOSED: [2015-12-15 Tue 09:04]
-** DONE Allow running of Fix from any subdir in work tree
-   CLOSED: [2015-12-23 Wed 16:18]
-   Fix now finds the work tree root by looking for the closest `.fix`
-   directory, and builds relative to that, rather than trying to build relative
-   to the current directory. (Buildscripts will always run with the
-   `$FIX_SOURCE_DIR` as the current directory.)
-
-   This means that filename of targets on the command line must be written
-   relative to the work tree root (for now).
-** DONE Set current dir for dependencies
-   CLOSED: [2016-01-03 Sun 18:13]
-   The current dir is now set to `$FIX_SOURCE_DIR` before invoking dependency
-   buildscripts too. Also added test case to verify this.
-** DONE Minimize `eval` use -- rewrite `find_work_tree`
-   CLOSED: [2016-01-07 Thu 00:51]
-   Added `seteval` function and rewrote `find_work_tree` to make use of it
-   (making `find_work_tree` significantly easier to read, and localizing the
-   hard-to-read magic to `seteval`).
-** DONE Minimize `eval` use -- rewrite `strip_path`
-   CLOSED: [2016-01-07 Thu 01:20]
-   Refactored/simplified `strip_path` function using `seteval`.
-** DONE Use relative paths in error messages
-   CLOSED: [2016-01-07 Thu 01:32]
-   Error messages should output paths relative to the user's current working
-   directory, for clarity, and to cut down on error message length.
-
-   Rewrote die() so that it now accept printf style %s sequences, and
-   additional filename arguments. Each filename so specified is recalculated by
-   die() to that it is relative to $FIX_PWD.
-** DONE Added unit test infrastructure
-   CLOSED: [2016-01-07 Thu 01:47]
-   Currently there are full-fledged integration tests, but no unit tests.
-   Rewrite the code to allow for unit tests, then start adding some unit tests.
-
-   Added new class of tests (`t/unit-*.t`) which extract one or more functions
-   from Fix, and exercise those specifically. (Previously existing tests are
-   all system tests.)
-** DONE Rename `echo` -> `say`
-   CLOSED: [2016-01-07 Thu 02:17]
-   Changed all occurrences of `echo` to `say` wherever the printed content is
-   anything but simple hex string, numeric or constants.
-** DONE Specify target relative to current dir, not work tree root    :v0_12:
-   CLOSED: [2016-01-07 Thu 18:49]
-   Target paths given on the command are now expressed relative to the user's
-   current directory, not relative to the work tree root. (This is more
-   intuitive, allows for tab completion and is also what Git does.)
-
-   When Fix is invoked from a buildscript, the target path are instead relative
-   to the fix target directory. (This seems to make intutive sense, but might
-   change in future versions.)
-   ---------------------------------------------------------------------------
-   Earlier description:
-
-   Currently, if you're rebuilding a target called `build/TARGET`, and
-   $FIX_TARGET_DIR is set to `build`, you'll need to be in the root of the work
-   tree and invoke Fix as:
-
-       fix TARGET
-
-   This should not be the case. Targets should always be specified relative to
-   the users current directory, so that if you were *inside* $FIX_TARGET_DIR,
-   you should use the above command, but at the root of the work tree you
-   should instead name the target dir explicitly and use:
-
-       fix build/TARGET
-
-   And if you were inside a dir called `build/x` you should be able to invoke
-   Fix with:
-
-       fix ../TARGET
-
-   And from inside your $FIX_SCRIPT_DIR, you might use:
-
-       fix ../build/TARGET
-
-   Etc.
-** DONE Do not export $FIX_PARENT
-   CLOSED: [2016-01-08 Fri 09:31]
-   $FIX_PARENT does not need to be exported, as it is only used internally by
-   Fix.
-
-   $FIX_TARGET, however, needs to be exported, so added tests for that.
-** DONE Options --script-dir, --source-dir, --target-dir              :v0_12:
-   CLOSED: [2016-03-04 Fri 20:09]
-   For setting $FIX_SCRIPT_DIR, $FIX_SOURCE_DIR, $FIX_TARGET_DIR. Expand paths
-   given by user to full absolute paths internally.
-** DONE Milestone: Version 0.12 - Easier use of paths --------------- :v0_12:
-   CLOSED: [2016-03-04 Fri 20:09]
-** DONE Update Fix copyright year to 2016
-   CLOSED: [2016-03-05 Sat 23:46]
-** DONE Version test case should check copyright year as well
-   CLOSED: [2016-03-05 Sat 23:46]
-   Test that checks output of `--version` should be expanded to enforce the
-   year part of the version message as well, not just the version number
-** DONE --script-dir, --source-dir, --target-dir now check their args
-   CLOSED: [2016-03-06 Sun 21:05]
-   If provided the empty string as an arg, or a DIR which name starts with a
-   minus sign Fix will now fail with an error message.
-** DONE trim_brackets() unit tests
-   CLOSED: [2016-03-18 Fri 09:53]
-** DONE trim_space() unit tests
-   CLOSED: [2016-03-18 Fri 10:10]
-** DONE --init should accept --{target|source|script}-dir options
-   CLOSED: [2016-03-21 Mon 19:24]
-   Using `--script-dir`, `--source-dir` and/or `--target-dir` together with
-   `--init` should result in those parameters being written to the config file
-   instead of the default.
-** DONE Tests for --init with --{target|source|script}-dir options
-   CLOSED: [2016-03-22 Tue 19:13]
-** DONE Message for successful --init
-   CLOSED: [2016-03-22 Tue 23:36]
-   "Initialized empty Fix build state in '.git/'"
-** DONE Exit status 13 on failed --init
-   CLOSED: [2016-03-23 Wed 13:15]
-   Document in README.txt.
-** DONE Defaults in save_config() AND outside it?
-   CLOSED: [2016-03-23 Wed 17:01]
-   Setting defaults to scriptdir = fix, sourcedir = src and targetdir = build
-   should only happen once.
-
-   Right now these are set inside save_config() as well as in the --init if
-   case before init() is being called.
-** DONE Set FIX_{SCRIPT|SOURCE|TARGET}_DIR default only once
-   CLOSED: [2016-03-23 Wed 18:26]
-   Currently defaults are set once when invoking `--init` and once if no config
-   file is found during normal build. Instead they should be set only once.
-
-   load_config() was rewritten to load the default values even if no config
-   file could be found.
-
-   save_config() calls load_config() to make sure that the defaults are loaded.
-** DONE Docs: Document variables
-   CLOSED: [2016-04-22 Fri 10:34]
-   Internal variables should be reset by mother process, and not affect how Fix
-   will run if set in the invoking shell. Modifying any of these in a
-   buildscript will confuse Fix (so don't do that!)
-   + $FIX_SCRIPT_DIR -- path relative worktree root
-   + $FIX_SOURCE_DIR -- path relative worktree root
-   + $FIX_TARGET_DIR -- path relative worktree root
-   + $FIX_DEBUG      -- boolean
-   + $FIX_FORCE      -- boolean
-   + $FIX_LEVEL      -- INTERNAL
-   + $FIX_LOCK       -- INTERNAL
-   + $FIX_PID        -- INTERNAL
-   + $FIX_PWD        -- INTERNAL
-   + $FIX_TARGET     -- INTERNAL
-   + $FIX_DIR        -- INTERNAL (open up later on)
-   + $FIX_WORK_TREE  -- INTERNAL (open up later on)
-** DONE Unit tests for load_config()
-   CLOSED: [2016-04-22 Fri 22:38]
-   Added tests for the following
-   + Too few args error
-   + Errors messages both before and after first [section]
-   + Unknown (alphanumeric) section names should pass (future compat.)
-   + Env already set with relpaths should be turned into abspath
-   + Env already set with abspath should be retained
-   + Unknown (alphanumeric) config variables should pass (future compat.)
-   + Having no config file
-   + Config file with missing final newline
-   + Trimming indentation + space at EOL
-   + '#' and ';' comments
-   + Invalid section names
-   + Setting of config variable
-   + Syntax error in line
-   + Trimming of space around config variable name
-   + Trimming of space around config variable value
-   + Non-alphanumeric config variable
-   + Missing [section]
-   + Setting of values
-   + Default values + conversion to abspath
-   + Environment should take precedence over config file
-** DONE Milestone: Version 0.13 - Config file ----------------------- :v0_13:
-   CLOSED: [2016-04-29 Fri 21:50]
-
-   A default config file (`.fix/config` -- containing the default settings) is
-   created when running `fix --init`. Currently only three options are
-   supported (each can be overridden by the corresponding environment
-   variable):
-
-     + scriptdir = $FIX_SCRIPT_DIR
-     + sourcedir = $FIX_SOURCE_DIR
-     + targetdir = $FIX_TARGET_DIR
-
-   The `--force` and `--debug` options cannot be set through the config file.
-** DONE Unit tests for save_config()
-   CLOSED: [2016-04-29 Fri 21:50]
-** DONE Cleanup & testing of config file stuff                        :v0_13:
-   CLOSED: [2016-05-02 Mon 12:44]
-** DONE Unsetting of CDPATH before running buildscript
-   CLOSED: [2016-06-07 Tue 09:33]
-   The environment variable CDPATH (mandated by POSIX) affects the way `cd`
-   works with relative paths, causing unpredictability for buildscripts. It
-   should therefore be unset by Fix, before running buildscript.
-
-   The `dash` shell documentation for `cd`:
-
-       If an entry for CDPATH appears in the environment of the cd command or
-       the shell variable CDPATH is set and the directory name does not begin
-       with a slash, then the directories listed in CDPATH will be searched for
-       the specified directory. The format of CDPATH is the same as that of
-       PATH. If a single dash is specified as the argument, it will be replaced
-       by the value of OLDPWD. The cd command will print out the name of the
-       directory that it actually switched to if this is different from the
-       name that the user gave.
+   It is, however acceptable to have a function like 'is_changed' (a test
+   function) to fail, and advisable to have some special output acknowledging
+   this fact.
+** DONE Test 'END_TODO'
+   CLOSED: [2014-07-28 Mon 01:56]
+** DONE Test 'END_SKIP'
+   CLOSED: [2014-07-28 Mon 01:57]
+** DONE Improve 'end_title' tests
+   CLOSED: [2014-07-28 Mon 01:57]
+** DONE 'fail' and 'pass' now also adheres to 'SKIP' mode
+   CLOSED: [2014-07-28 Mon 01:57]
+   Not the neatest solution, maybe. But since user is allowed to call 'pass'
+   and 'fail' directly, this must be supported. Currently this involves quite a
+   if cases all testing to see if '# SKIP' is part of the current test
+   description, however. :( -- Well, it works, anyway!
+** DONE Test functions should use 'else', not 'return'
+   CLOSED: [2014-07-28 Mon 02:19]
+** DONE Explicit return values when return is used
+   CLOSED: [2014-07-28 Mon 02:19]
+** DONE Test 'import_function'
+   CLOSED: [2016-02-28 Sun 15:35]
+** DONE Test 'stdin'
+   CLOSED: [2016-05-30 Mon 09:40]
 * [eof]
