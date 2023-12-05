@@ -1,5 +1,5 @@
 # -*- sh -*-
-# Copyright (C) 2015 zrajm <fix@zrajm.org>
+# Copyright (C) 2015 zrajm <dashtap@zrajm.org>
 # Licensed under GNU GPL version 2, see LICENSE-GPL2.txt for details.
 
 ## DASHTAP

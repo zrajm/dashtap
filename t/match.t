@@ -1,6 +1,6 @@
 #!/usr/bin/env dash
 # -*- sh -*-
-# Copyright (C) 2015 zrajm <fix@zrajm.org>
+# Copyright (C) 2015 zrajm <dashtap@zrajm.org>
 # License: GPLv2 [https://gnu.org/licenses/gpl-2.0.txt]
 . "./dashtap.sh"
 NADA=""; strip_newline NADA                    # NADA = '\No newline at end'

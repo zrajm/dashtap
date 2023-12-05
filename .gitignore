@@ -5,9 +5,4 @@
 *.bak
 *.tmp
 
-# Fix files in working tree root.
-/.fix
-/build
-/fix
-
 #[eof]
