@@ -63,7 +63,7 @@ not ok 1 - Test description
 "
 STDERR="
 #   Failed test 'Test description'
-#   in 't/end_title.t'
+#   in '$0'
 "
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL

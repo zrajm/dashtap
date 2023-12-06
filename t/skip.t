@@ -139,7 +139,7 @@ cd "$(mktemp -d)"
 STDOUT="not ok 1 - descr"
 STDERR="
 #   Failed test 'descr'
-#   in 't/skip.t'
+#   in '$0'
 #     GOT   : 1
 #     WANTED: 2"
 title "SKIP: Test description + no SKIP"
@@ -161,7 +161,7 @@ file_is   trap      "FULL"     "Didn't call exit"
 cd "$(mktemp -d)"
 STDOUT="not ok 1"
 STDERR="
-#   Failed test in 't/skip.t'
+#   Failed test in '$0'
 #     GOT   : 1
 #     WANTED: 2"
 title "SKIP: No test description + no SKIP"

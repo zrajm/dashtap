@@ -66,9 +66,9 @@ not ok 6 - is
 "
 STDERR="
 #   Failed test 'fail'
-#   in 't/end_todo.t'
+#   in '$0'
 #   Failed test 'is'
-#   in 't/end_todo.t'
+#   in '$0'
 #     GOT   : 1
 #     WANTED: 2
 "

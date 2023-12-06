@@ -69,7 +69,7 @@ title "is: Fail when called with two differing args"
 STDOUT="not ok 1
 "
 STDERR="
-#   Failed test in 't/is.t'
+#   Failed test in '$0'
 #     GOT   : 1
 #     WANTED: 2
 "
@@ -96,7 +96,7 @@ STDOUT="not ok 1 - Description
 "
 STDERR="
 #   Failed test 'Description'
-#   in 't/is.t'
+#   in '$0'
 #     GOT   : 1
 #     WANTED: 2
 "

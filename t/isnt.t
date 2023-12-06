@@ -113,7 +113,7 @@ title "isnt: Fail when called with two equal args"
 STDOUT="not ok 1
 "
 STDERR="
-#   Failed test in 't/isnt.t'
+#   Failed test in '$0'
 #     GOT   : 1
 #     WANTED: anything else
 "
@@ -140,7 +140,7 @@ STDOUT="not ok 1 - Description
 "
 STDERR="
 #   Failed test 'Description'
-#   in 't/isnt.t'
+#   in '$0'
 #     GOT   : 1
 #     WANTED: anything else
 "

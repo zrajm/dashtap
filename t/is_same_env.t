@@ -61,7 +61,7 @@ title "Fail when called with one variable changed"
 STDOUT="not ok 1 - Description"
 STDERR="
 #   Failed test 'Description'
-#   in 't/is_same_env.t'
+#   in '$0'
 #     Variable value(s) changed:
 #     Y=first --> thereafter
 #     Y2=first --> thereafter"
@@ -125,7 +125,7 @@ title "Fail when called with one variable added"
 STDOUT="not ok 1 - Description"
 STDERR="
 #   Failed test 'Description'
-#   in 't/is_same_env.t'
+#   in '$0'
 #     Variable(s) created:
 #     Y=added"
 
@@ -186,7 +186,7 @@ title "Fail when called with two variables added at end"
 STDOUT="not ok 1 - Description"
 STDERR="
 #   Failed test 'Description'
-#   in 't/is_same_env.t'
+#   in '$0'
 #     Variable(s) created:
 #     Y=added
 #     Z=added"
@@ -246,7 +246,7 @@ title "Fail when called with two variables added at beginning"
 STDOUT="not ok 1 - Description"
 STDERR="
 #   Failed test 'Description'
-#   in 't/is_same_env.t'
+#   in '$0'
 #     Variable(s) created:
 #     X=added
 #     Y=added2"
@@ -307,7 +307,7 @@ title "Fail when called with one variable removed at end"
 STDOUT="not ok 1 - Description"
 STDERR="
 #   Failed test 'Description'
-#   in 't/is_same_env.t'
+#   in '$0'
 #     Variable(s) unset/removed:
 #     Y=removed
 #     Z=removed2"
@@ -368,7 +368,7 @@ title "Fail when called with one variable removed at beginning"
 STDOUT="not ok 1 - Description"
 STDERR="
 #   Failed test 'Description'
-#   in 't/is_same_env.t'
+#   in '$0'
 #     Variable(s) unset/removed:
 #     X=removed
 #     Y=removed2"
@@ -426,7 +426,7 @@ title "Fail when called with only one variable which is removed"
 STDOUT="not ok 1 - Description"
 STDERR="
 #   Failed test 'Description'
-#   in 't/is_same_env.t'
+#   in '$0'
 #     Variable(s) unset/removed:
 #     X=removed"
 
@@ -480,7 +480,7 @@ title "Fail when called with no variables and one variable added"
 STDOUT="not ok 1 - Description"
 STDERR="
 #   Failed test 'Description'
-#   in 't/is_same_env.t'
+#   in '$0'
 #     Variable(s) created:
 #     X=added"
 
@@ -537,7 +537,7 @@ title "Variable whose name is substring of ignored variable should not be ignore
 STDOUT="not ok 1 - Description"
 STDERR="
 #   Failed test 'Description'
-#   in 't/is_same_env.t'
+#   in '$0'
 #     Variable value(s) changed:
 #     BC=first --> second"
 
