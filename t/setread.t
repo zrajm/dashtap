@@ -19,11 +19,12 @@ title "setread: Fail when more than two args are used without '+'"
 STDERR="setread: Bad number of args"
 (
     trap 'echo EXIT >&3' 0
-    setread TOO MANY ARGS <&-
+    setread TOO MANY ARGS <&-; RC="$?"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255        "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255        "Exit status"
 is  "$(cat err)"   "$STDERR"  "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(cat trap)"  "EXIT"     "Called exit"
@@ -35,11 +36,12 @@ title "setread: Fail when more than three args are used"
 STDERR="setread: Bad number of args"
 (
     trap 'echo EXIT >&3' 0
-    setread '+' TOO MANY ARGS <&-
+    setread '+' TOO MANY ARGS <&-; RC="$?"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255        "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255        "Exit status"
 is  "$(cat err)"   "$STDERR"  "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(cat trap)"  "EXIT"     "Called exit"
@@ -51,11 +53,12 @@ title "setread: Fail when called with no args"
 STDERR="setread: Bad number of args"
 (
     trap 'echo EXIT >&3' 0
-    setread <&-
+    setread <&-; RC="$?"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255        "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255        "Exit status"
 is  "$(cat err)"   "$STDERR"  "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(cat trap)"  "EXIT"     "Called exit"
@@ -67,11 +70,12 @@ title "setread: Fail when called with bad variable name"
 STDERR="setread: Bad VARNAME '_'"
 (
     trap 'echo EXIT >&3' 0
-    setread _ <&-
+    setread _ <&-; RC="$?"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255        "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255        "Exit status"
 is  "$(cat err)"   "$STDERR"  "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(cat trap)"  "EXIT"     "Called exit"
@@ -83,14 +87,15 @@ title "setread: Ignore STDIN when two args are used"
 VALUE="ARG\No newline at end."
 (
     trap 'echo EXIT >&3' 0
-    setread XX "ARG" <<-"EOF"
+    setread XX "ARG" <<-"EOF"; RC="$?"
 	STDIN
 	EOF
     printf "%s" "$XX" >value
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0          "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0          "Exit status"
 is  "$(cat err)"   ""         "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(dot value)" "$VALUE"   "Variable value"
@@ -103,14 +108,15 @@ title "setread: Ignore STDIN when two args are used + don't strip newline"
 VALUE="ARG."
 (
     trap 'echo EXIT >&3' 0
-    setread + XX "ARG" <<-"EOF"
+    setread + XX "ARG" <<-"EOF"; RC="$?"
 	STDIN
 	EOF
     printf "%s" "$XX" >value
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0          "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0          "Exit status"
 is  "$(cat err)"   ""         "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(dot value)" "$VALUE"   "Variable value"
@@ -123,14 +129,15 @@ title "setread: Process STDIN when one arg is used"
 VALUE="STDIN."
 (
     trap 'echo EXIT >&3' 0
-    setread XX <<-"EOF"
+    setread XX <<-"EOF"; RC="$?"
 	STDIN
 	EOF
     printf "%s" "$XX" >value
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0          "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0          "Exit status"
 is  "$(cat err)"   ""         "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(dot value)" "$VALUE"   "Variable value"
@@ -144,14 +151,15 @@ VALUE="STDIN
 ."
 (
     trap 'echo EXIT >&3' 0
-    setread + XX <<-"EOF"
+    setread + XX <<-"EOF"; RC="$?"
 	STDIN
 	EOF
     printf "%s" "$XX" >value
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0          "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0          "Exit status"
 is  "$(cat err)"   ""         "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(dot value)" "$VALUE"   "Variable value"
@@ -164,12 +172,13 @@ title "setread: Process STDIN when one arg is used + no input"
 VALUE="."
 (
     trap 'echo EXIT >&3' 0
-    setread + XX
+    setread + XX; RC="$?"
     printf "%s" "$XX" >value
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0          "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0          "Exit status"
 is  "$(cat err)"   ""         "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(dot value)" "$VALUE"   "Variable value"
@@ -183,12 +192,13 @@ VALUE="NEW."
 (
     trap 'echo EXIT >&3' 0
     X="STRING"
-    setread + XX "NEW"
+    setread + XX "NEW"; RC="$?"
     printf "%s" "$XX" >value
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0          "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0          "Exit status"
 is  "$(cat err)"   ""         "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(dot value)" "$VALUE"   "Variable value"
@@ -201,14 +211,15 @@ title "setread: Process STDIN with space and quotes"
 VALUE="  '  \"  ."
 (
     trap 'echo EXIT >&3' 0
-    setread XX <<-"EOF"
+    setread XX <<-"EOF"; RC="$?"
 	  '  "  
 	EOF
     printf "%s" "$XX" >value
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0          "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0          "Exit status"
 is  "$(cat err)"   ""         "Standard error"
 is  "$(dot out)"   "."        "Standard output"
 is  "$(dot value)" "$VALUE"   "Variable value"
@@ -221,12 +232,13 @@ title "setread: Process arg with space and quotes"
 VALUE="  '  \"  \No newline at end."
 (
     trap 'echo EXIT >&3' 0
-    setread XX "  '  \"  "
+    setread XX "  '  \"  "; RC="$?"
     printf "%s" "$XX" >value
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0        "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0        "Exit status"
 is  "$(cat err)"   ""       "Standard error"
 is  "$(dot out)"   "."      "Standard output"
 is  "$(dot value)" "$VALUE" "Variable value"

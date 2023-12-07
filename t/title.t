@@ -22,12 +22,13 @@ STDERR="title: Bad number of args
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
     trap 'echo EXIT >&3' 0
-    title MANY ARGS
+    title MANY ARGS; RC="$?"
     fail "Test description"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255         "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Didn't call exit"
@@ -43,12 +44,13 @@ STDERR="title: Bad number of args
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
     trap 'echo EXIT >&3' 0
-    title
+    title; RC="$?"
     fail "Test description"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255         "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Didn't call exit"
@@ -71,13 +73,14 @@ STDERR="
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
     trap 'echo EXIT >&3' 0
-    title "Test title"
+    title "Test title"; RC="$?"
     fail
     fail "Test description"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0           "Exit status"
+    exit "$RC"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "FULL"      "Didn't call exit"

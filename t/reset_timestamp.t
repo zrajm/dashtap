@@ -20,13 +20,12 @@ STDERR="reset_timestamp: Bad number of args
 "
 (
     trap 'echo EXIT >&3' 0
-    reset_timestamp
-    RC="$?"
+    reset_timestamp; RC="$?"
     trap - 0
     echo FULL >&3
     exit "$RC"
-) >out 2>err 3>trap
-is  $?             255         "Exit status"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Called exit"
@@ -40,13 +39,12 @@ STDERR="timestamp_file: Bad TIMESTAMP 'NOT-A-TIMESTAMP'
 "
 (
     trap 'echo EXIT >&3' 0
-    reset_timestamp "NOT-A-TIMESTAMP"
-    RC="$?"
+    reset_timestamp "NOT-A-TIMESTAMP"; RC="$?"
     trap - 0
     echo FULL >&3
     exit "$RC"
-) >out 2>err 3>trap
-is  $?             255         "Exit status"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Called exit"
@@ -67,9 +65,10 @@ timestamp TIMESTAMP2 "$FILE"
 isnt "$TIMESTAMP1" "$TIMESTAMP2"   "Modified file timestamp"
 
 # reset timestamp
-reset_timestamp "$TIMESTAMP1"
+reset_timestamp "$TIMESTAMP1"; RC="$?"
 timestamp TIMESTAMP3 "$FILE"
 is   "$TIMESTAMP1" "$TIMESTAMP3"   "Reset file timestamp"
+is   "$RC"         0               "Exit status"
 
 ##############################################################################
 

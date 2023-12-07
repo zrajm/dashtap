@@ -25,8 +25,8 @@ STDERR="END_SKIP: No args allowed
     END_SKIP ARG
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255         "Exit status"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Didn't call exit"
@@ -46,8 +46,8 @@ STDERR="END_SKIP: SKIP not set
     fail "Test description"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255         "Exit status"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Didn't call exit"
@@ -85,8 +85,8 @@ STDERR="
     is 1 2 "is"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0           "Exit status"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "FULL"      "Didn't call exit"

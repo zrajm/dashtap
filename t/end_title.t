@@ -27,8 +27,8 @@ STDERR="end_title: No args allowed
     end_title ARG
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255         "Exit status"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Didn't call exit"
@@ -48,8 +48,8 @@ STDERR="end_title: Title not set
     fail "Test description"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             255         "Exit status"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Didn't call exit"
@@ -74,8 +74,8 @@ STDERR="
     fail "Test description"
     trap - 0
     echo FULL >&3
-) >out 2>err 3>trap
-is  $?             0           "Exit status"
+) >out 2>err 3>trap; RC="$?"
+is  "$RC"          0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "FULL"      "Didn't call exit"

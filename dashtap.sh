@@ -1,5 +1,5 @@
 # -*- sh -*-
-# Copyright (C) 2015 zrajm <dashtap@zrajm.org>
+# Copyright (C) 2015-2023 zrajm <dashtap@zrajm.org>
 # Licensed under GNU GPL version 2, see LICENSE-GPL2.txt for details.
 
 ## DASHTAP
@@ -264,7 +264,7 @@ indent() {
             echo "${LINE:+$INDENT $LINE}"
         done
     fi
-    [ -z "$SHOWN" ] && echo "$PROMPT"          # make sure PROMPT was shown
+    if [ -z "$SHOWN" ]; then echo "$PROMPT"; fi # make sure PROMPT was shown
 }
 
 done_testing() {
@@ -596,12 +596,12 @@ setread() {
     [ $# -lt 2 -o $# -gt 3 ] && error "setread: Bad number of args"
     varname "$2" || error "setread: Bad VARNAME '$2'"
     if [ $# = 3 ]; then                        # set to $3
-        eval $2'="$3"'
+        eval "$2=\"\$3\""
     else                                       # set to STDIN
         set -- "$@" "$(stdin; echo .)"
-        eval $2'="${3%.}"'
+        eval "$2=\"\${3%.}\""
     fi
-    [ -z "$1" ] && strip_newline "$2"
+    if [ -z "$1" ]; then strip_newline "$2"; fi
 }
 
 # Usage: seteval [+] VARNAME STATEMENTS
