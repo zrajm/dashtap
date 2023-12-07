@@ -1,6 +1,6 @@
 #!/usr/bin/env dash
 # -*- sh -*-
-# Copyright (C) 2015 zrajm <dashtap@zrajm.org>
+# Copyright (C) 2015-2023 zrajm <dashtap@zrajm.org>
 # License: GPLv2 [https://gnu.org/licenses/gpl-2.0.txt]
 . "./dashtap.sh"
 
@@ -22,12 +22,12 @@ STDERR="end_title: No args allowed
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     title "Test title"
     end_title ARG
     trap - 0
-    echo FULL >trap
-) >out 2>err
+    echo FULL >&3
+) >out 2>err 3>trap
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
@@ -43,12 +43,12 @@ STDERR="end_title: Title not set
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     end_title
     fail "Test description"
     trap - 0
-    echo FULL >trap
-) >out 2>err
+    echo FULL >&3
+) >out 2>err 3>trap
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
@@ -68,13 +68,13 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     title "Test title"
     end_title
     fail "Test description"
     trap - 0
-    echo FULL >trap
-) >out 2>err
+    echo FULL >&3
+) >out 2>err 3>trap
 is  $?             0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"

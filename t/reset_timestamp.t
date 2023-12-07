@@ -1,6 +1,6 @@
 #!/usr/bin/env dash
 # -*- sh -*-
-# Copyright (C) 2015 zrajm <dashtap@zrajm.org>
+# Copyright (C) 2015-2023 zrajm <dashtap@zrajm.org>
 # License: GPLv2 [https://gnu.org/licenses/gpl-2.0.txt]
 . "./dashtap.sh"
 
@@ -19,13 +19,13 @@ STDOUT=""
 STDERR="reset_timestamp: Bad number of args
 "
 (
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     reset_timestamp
     RC="$?"
     trap - 0
-    echo FULL >trap
+    echo FULL >&3
     exit "$RC"
-) >out 2>err
+) >out 2>err 3>trap
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
@@ -39,13 +39,13 @@ STDOUT=""
 STDERR="timestamp_file: Bad TIMESTAMP 'NOT-A-TIMESTAMP'
 "
 (
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     reset_timestamp "NOT-A-TIMESTAMP"
     RC="$?"
     trap - 0
-    echo FULL >trap
+    echo FULL >&3
     exit "$RC"
-) >out 2>err
+) >out 2>err 3>trap
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"

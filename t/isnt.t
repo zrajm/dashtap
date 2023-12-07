@@ -1,6 +1,6 @@
 #!/usr/bin/env dash
 # -*- sh -*-
-# Copyright (C) 2015 zrajm <dashtap@zrajm.org>
+# Copyright (C) 2015-2023 zrajm <dashtap@zrajm.org>
 # License: GPLv2 [https://gnu.org/licenses/gpl-2.0.txt]
 . "./dashtap.sh"
 
@@ -21,13 +21,13 @@ STDERR="isnt: Bad number of args
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     isnt 1
     RC="$?"
     trap - 0
-    echo FULL >trap
+    echo FULL >&3
     exit "$RC"
-) >out 2>err
+) >out 2>err 3>trap
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
@@ -43,13 +43,13 @@ STDERR="isnt: Bad number of args
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     isnt FAR TOO MANY ARGS
     RC="$?"
     trap - 0
-    echo FULL >trap
+    echo FULL >&3
     exit "$RC"
-) >out 2>err
+) >out 2>err 3>trap
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
@@ -72,13 +72,13 @@ STDERR=""
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     isnt 1 2
     RC="$?"
     trap - 0
-    echo FULL >trap
+    echo FULL >&3
     exit "$RC"
-) >out 2>err
+) >out 2>err 3>trap
 is  $?             0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
@@ -94,13 +94,13 @@ STDERR=""
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     isnt 1 2 Description
     RC="$?"
     trap - 0
-    echo FULL >trap
+    echo FULL >&3
     exit "$RC"
-) >out 2>err
+) >out 2>err 3>trap
 is  $?             0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
@@ -120,13 +120,13 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     isnt 1 1
     RC="$?"
     trap - 0
-    echo FULL >trap
+    echo FULL >&3
     exit "$RC"
-) >out 2>err
+) >out 2>err 3>trap
 is  $?             1           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
@@ -147,13 +147,13 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >trap' 0
+    trap 'echo EXIT >&3' 0
     isnt 1 1 Description
     RC="$?"
     trap - 0
-    echo FULL >trap
+    echo FULL >&3
     exit "$RC"
-) >out 2>err
+) >out 2>err 3>trap
 is  $?             1           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
