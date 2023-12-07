@@ -23,10 +23,10 @@ STDERR="is: Bad number of args
     dashtap_init
     trap 'echo EXIT >trap' 0
     is 1
-    STATUS=$?
+    RC="$?"
     trap - 0
     echo FULL >trap
-    exit $STATUS
+    exit "$RC"
 ) >out 2>err
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
@@ -45,10 +45,10 @@ STDERR="is: Bad number of args
     dashtap_init
     trap 'echo EXIT >trap' 0
     is FAR TOO MANY ARGS
-    STATUS=$?
+    RC="$?"
     trap - 0
     echo FULL >trap
-    exit $STATUS
+    exit "$RC"
 ) >out 2>err
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
@@ -78,10 +78,10 @@ STDERR="
     dashtap_init
     trap 'echo EXIT >trap' 0
     is 1 2
-    STATUS=$?
+    RC="$?"
     trap - 0
     echo FULL >trap
-    exit $STATUS
+    exit "$RC"
 ) >out 2>err
 is  $?             1           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
@@ -105,10 +105,10 @@ STDERR="
     dashtap_init
     trap 'echo EXIT >trap' 0
     is 1 2 Description
-    STATUS=$?
+    RC="$?"
     trap - 0
     echo FULL >trap
-    exit $STATUS
+    exit "$RC"
 ) >out 2>err
 is  $?             1           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
@@ -127,10 +127,10 @@ STDERR=""
     dashtap_init
     trap 'echo EXIT >trap' 0
     is 1 1
-    STATUS=$?
+    RC="$?"
     trap - 0
     echo FULL >trap
-    exit $STATUS
+    exit "$RC"
 ) >out 2>err
 is  $?             0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
@@ -149,10 +149,10 @@ STDERR=""
     dashtap_init
     trap 'echo EXIT >trap' 0
     is 1 1 Description
-    STATUS=$?
+    RC="$?"
     trap - 0
     echo FULL >trap
-    exit $STATUS
+    exit "$RC"
 ) >out 2>err
 is  $?             0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"

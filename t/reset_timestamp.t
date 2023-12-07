@@ -21,10 +21,10 @@ STDERR="reset_timestamp: Bad number of args
 (
     trap 'echo EXIT >trap' 0
     reset_timestamp
-    STATUS=$?
+    RC="$?"
     trap - 0
     echo FULL >trap
-    exit $STATUS
+    exit "$RC"
 ) >out 2>err
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
@@ -41,10 +41,10 @@ STDERR="timestamp_file: Bad TIMESTAMP 'NOT-A-TIMESTAMP'
 (
     trap 'echo EXIT >trap' 0
     reset_timestamp "NOT-A-TIMESTAMP"
-    STATUS=$?
+    RC="$?"
     trap - 0
     echo FULL >trap
-    exit $STATUS
+    exit "$RC"
 ) >out 2>err
 is  $?             255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
