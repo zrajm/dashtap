@@ -630,7 +630,7 @@ seteval() {
     [ $# -lt 2 -o $# -gt 3 ] && error "seteval: Bad number of args"
     varname "$2" || error "seteval: Bad VARNAME '$2'"
     [ $# = 2 ] && set -- "$@" "$(stdin)"        # read STDIN
-    set -- "$1" "$2" "$(eval "$3"; echo ":$?")" # append return value
+    set -- "$1" "$2" "$(set +e; eval "$3"; echo ":$?")" # append return value
     eval $2'="${3%:*}"'
     [ -z "$1" ] && strip_newline "$2"
     return "${3##*:}"
