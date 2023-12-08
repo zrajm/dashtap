@@ -21,15 +21,16 @@ STDERR="END_TODO: No args allowed
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     TODO "Reason"
     END_TODO ARG; RC="$?"; EXEC=FULL
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Didn't call exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
@@ -41,15 +42,16 @@ STDERR="END_TODO: TODO not set
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     END_TODO; RC="$?"; EXEC=FULL
     fail "Test description"
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Didn't call exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
@@ -73,7 +75,7 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     TODO "Reason"
     pass "pass"
     fail "fail"
@@ -83,11 +85,12 @@ STDERR="
     fail "fail"
     is 1 2 "is"
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "FULL"      "Didn't call exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 

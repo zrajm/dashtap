@@ -19,14 +19,15 @@ STDOUT=""
 STDERR="reset_timestamp: Bad number of args
 "
 (
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     reset_timestamp; RC="$?"; EXEC=FULL
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Called exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
@@ -36,14 +37,15 @@ STDOUT=""
 STDERR="timestamp_file: Bad TIMESTAMP 'NOT-A-TIMESTAMP'
 "
 (
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     reset_timestamp "NOT-A-TIMESTAMP"; RC="$?"; EXEC=FULL
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Called exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
@@ -56,6 +58,7 @@ echo "CONTENT" >"$FILE"
 timestamp TIMESTAMP1 "$FILE"; RC="$?"
 is   "$RC"         0               "Exit status"
 isnt "$TIMESTAMP1" ""              "Timestamp1 mustn't be empty"
+is   ">$-<"        "><"            "Shell options"
 
 # modify timestamp
 chtime 2000-01-01 "$FILE"
@@ -63,6 +66,7 @@ timestamp TIMESTAMP2 "$FILE"; RC="$?"
 is   "$RC"         0               "Exit status"
 isnt "$TIMESTAMP2" ""              "Timestamp2 mustn't be empty"
 isnt "$TIMESTAMP1" "$TIMESTAMP2"   "Modified file timestamp"
+is   ">$-<"        "><"            "Shell options"
 
 # reset timestamp
 reset_timestamp "$TIMESTAMP1"; RC="$?"
@@ -72,6 +76,7 @@ timestamp TIMESTAMP3 "$FILE"; RC="$?"
 is   "$RC"         0               "Exit status"
 isnt "$TIMESTAMP2" ""              "Timestamp3 mustn't be empty"
 is   "$TIMESTAMP1" "$TIMESTAMP3"   "Reset file timestamp"
+is   ">$-<"        "><"            "Shell options"
 
 ##############################################################################
 

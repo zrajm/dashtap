@@ -21,14 +21,15 @@ STDERR="is: Bad number of args
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     is 1; RC="$?"; EXEC=FULL
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Called exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
@@ -40,14 +41,15 @@ STDERR="is: Bad number of args
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     is FAR TOO MANY ARGS; RC="$?"; EXEC=FULL
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "EXIT"      "Called exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
@@ -70,14 +72,15 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     is 1 2; RC="$?"; EXEC=FULL
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          1           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "FULL"      "Didn't call exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
@@ -94,14 +97,15 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     is 1 2 Description; RC="$?"; EXEC=FULL
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          1           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "FULL"      "Didn't call exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
@@ -113,14 +117,15 @@ STDERR=""
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     is 1 1; RC="$?"; EXEC=FULL
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "FULL"      "Didn't call exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
@@ -132,14 +137,15 @@ STDERR=""
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3; echo ">$-<" >&4' 0
     is 1 1 Description; RC="$?"; EXEC=FULL
     exit "$RC"
-) >out 2>err 3>trap; RC="$?"
+) >out 2>err 3>trap 4>opts; RC="$?"
 is  "$RC"          0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
 is  "$(dot out)"   "$STDOUT."  "Standard output"
 is  "$(cat trap)"  "FULL"      "Didn't call exit"
+is  "$(cat opts)"  "><"        "Shell options"
 
 ##############################################################################
 
