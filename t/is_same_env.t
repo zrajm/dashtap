@@ -13,16 +13,14 @@ title "Pass when called with two identical environments"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=hello1
 	Y=hello2
 	=
 	X=hello1
 	Y=hello2
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -41,8 +39,8 @@ title "Fail when called with one variable changed"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=hello1
 	Y=first
 	Y2=first
@@ -53,8 +51,6 @@ title "Fail when called with one variable changed"
 	Y2=thereafter
 	Z=hello3
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -78,8 +74,8 @@ title "Pass when called with one ignored variable changed"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env Y "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env Y "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=hello1
 	Y=first
 	Z=hello3
@@ -88,8 +84,6 @@ title "Pass when called with one ignored variable changed"
 	Y=thereafter
 	Z=hello3
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -108,8 +102,8 @@ title "Fail when called with one variable added"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=hello1
 	Z=hello3
 	=
@@ -117,8 +111,6 @@ title "Fail when called with one variable added"
 	Y=added
 	Z=hello3
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -141,8 +133,8 @@ title "Pass when called with one ignored variable added"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env Y "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env Y "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=hello1
 	Z=hello3
 	=
@@ -150,8 +142,6 @@ title "Pass when called with one ignored variable added"
 	Y=added
 	Z=hello3
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -170,16 +160,14 @@ title "Fail when called with two variables added at end"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=hello1
 	=
 	X=hello1
 	Y=added
 	Z=added
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -203,15 +191,13 @@ title "Pass when called with one ignored variable added at end"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env Y "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env Y "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=hello1
 	=
 	X=hello1
 	Y=added
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -230,16 +216,14 @@ title "Fail when called with two variables added at beginning"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	Z=hello2
 	=
 	X=added
 	Y=added2
 	Z=hello2
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -263,16 +247,14 @@ title "Pass when called with two ignored variables added at beginning"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env X:Y "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env X:Y "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	Z=hello2
 	=
 	X=added
 	Y=added2
 	Z=hello2
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -291,16 +273,14 @@ title "Fail when called with one variable removed at end"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=hello1
 	Y=removed
 	Z=removed2
 	=
 	X=hello1
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -324,16 +304,14 @@ title "Pass when called with one ignored variable removed at end"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env Y:Z "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env Y:Z "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=hello1
 	Y=removed
 	Z=removed2
 	=
 	X=hello1
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -352,16 +330,14 @@ title "Fail when called with one variable removed at beginning"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=removed
 	Y=removed2
 	Z=hello2
 	=
 	Z=hello2
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -385,16 +361,14 @@ title "Pass when called with two ignored variables removed at beginning"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env X:Y "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env X:Y "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=removed
 	Y=removed2
 	Z=hello2
 	=
 	Z=hello2
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -413,13 +387,11 @@ title "Fail when called with only one variable which is removed"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=removed
 	=
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -442,13 +414,11 @@ title "Pass when called with only one ignored variable which is removed"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env X "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env X "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	X=removed
 	=
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -467,13 +437,11 @@ title "Fail when called with no variables and one variable added"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env : "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	=
 	X=added
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -496,13 +464,11 @@ title "Pass when called with no variable and one ignored variable added"
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env X "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env X "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	=
 	X=added
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 
@@ -521,16 +487,14 @@ title "Variable whose name is substring of ignored variable should not be ignore
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is_same_env ABCD "Description" 3<<-"=" 4<<-"-"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is_same_env ABCD "Description" 3<<-"=" 4<<-"-"; RC="$?"; EXEC=FULL
 	ABCD=one
 	BC=first
 	=
 	ABCD=two
 	BC=second
 	-
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >stdout 2>stderr 3>trap; RC="$?"
 

@@ -20,11 +20,9 @@ STDERR="END_SKIP: No args allowed
 "
 (
     dashtap_init
-    trap 'echo EXIT >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
     SKIP "Reason"
-    END_SKIP ARG; RC="$?"
-    trap - 0
-    echo FULL >&3
+    END_SKIP ARG; RC="$?"; EXEC=FULL
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
@@ -42,11 +40,9 @@ STDERR="END_SKIP: SKIP not set
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    END_SKIP; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    END_SKIP; RC="$?"; EXEC=FULL
     fail "Test description"
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
@@ -76,17 +72,15 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
     SKIP "Reason"
     pass "pass"
     fail "fail"
     is 1 2 "is"
-    END_SKIP; RC="$?"
+    END_SKIP; RC="$?"; EXEC=FULL
     pass "pass"
     fail "fail"
     is 1 2 "is"
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          0           "Exit status"

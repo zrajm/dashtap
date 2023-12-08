@@ -21,11 +21,9 @@ STDERR="title: Bad number of args
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    title MANY ARGS; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    title MANY ARGS; RC="$?"; EXEC=FULL
     fail "Test description"
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
@@ -43,11 +41,9 @@ STDERR="title: Bad number of args
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    title; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    title; RC="$?"; EXEC=FULL
     fail "Test description"
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
@@ -72,12 +68,10 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    title "Test title"; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    title "Test title"; RC="$?"; EXEC=FULL
     fail
     fail "Test description"
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          0           "Exit status"

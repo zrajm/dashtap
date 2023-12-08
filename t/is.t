@@ -21,10 +21,8 @@ STDERR="is: Bad number of args
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is 1; RC="$?"
-    trap - 0
-    echo FULL >&3
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is 1; RC="$?"; EXEC=FULL
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
@@ -42,10 +40,8 @@ STDERR="is: Bad number of args
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is FAR TOO MANY ARGS; RC="$?"
-    trap - 0
-    echo FULL >&3
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is FAR TOO MANY ARGS; RC="$?"; EXEC=FULL
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
@@ -74,10 +70,8 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is 1 2; RC="$?"
-    trap - 0
-    echo FULL >&3
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is 1 2; RC="$?"; EXEC=FULL
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          1           "Exit status"
@@ -100,10 +94,8 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is 1 2 Description; RC="$?"
-    trap - 0
-    echo FULL >&3
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is 1 2 Description; RC="$?"; EXEC=FULL
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          1           "Exit status"
@@ -121,10 +113,8 @@ STDERR=""
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is 1 1; RC="$?"
-    trap - 0
-    echo FULL >&3
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is 1 1; RC="$?"; EXEC=FULL
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          0           "Exit status"
@@ -142,10 +132,8 @@ STDERR=""
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    is 1 1 Description; RC="$?"
-    trap - 0
-    echo FULL >&3
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    is 1 1 Description; RC="$?"; EXEC=FULL
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          0           "Exit status"

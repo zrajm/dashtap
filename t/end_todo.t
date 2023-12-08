@@ -21,11 +21,9 @@ STDERR="END_TODO: No args allowed
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
     TODO "Reason"
-    END_TODO ARG; RC="$?"
-    trap - 0
-    echo FULL >&3
+    END_TODO ARG; RC="$?"; EXEC=FULL
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
@@ -43,11 +41,9 @@ STDERR="END_TODO: TODO not set
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
-    END_TODO; RC="$?"
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
+    END_TODO; RC="$?"; EXEC=FULL
     fail "Test description"
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
@@ -77,17 +73,15 @@ STDERR="
 (
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
-    trap 'echo EXIT >&3' 0
+    EXEC=EXIT; trap 'echo "$EXEC" >&3' 0
     TODO "Reason"
     pass "pass"
     fail "fail"
     is 1 2 "is"
-    END_TODO; RC="$?"
+    END_TODO; RC="$?"; EXEC=FULL
     pass "pass"
     fail "fail"
     is 1 2 "is"
-    trap - 0
-    echo FULL >&3
     exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          0           "Exit status"
