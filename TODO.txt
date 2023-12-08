@@ -1,6 +1,6 @@
 -*- org -*-
 
-* Program
+* [0/13] `dashtap.sh` program
 ** TODO Remove `fix.sh` specific functions in `dashtap.sh`
    E.g. init_test(), and maybe cpdir(), mkmetadata()... are there more?
 
@@ -88,11 +88,26 @@
    README.)
 ** TODO Merge 'is_changed' and 'is_unchanged' to follow DRY
 ** TODO Make sure all error messages use 'error'
-* README
+* TODO README
   Include a introduction to how to use Dashtap in the README.
-* To think about
+* [0/1] To think about
 ** TODO Merge 'execute' and 'seteval'?
-* Testing
+* [0/28] Testing
+** TODO Use execute() for all tests(?)
+   But some do, should the remaining tests also use it? (or do they need the
+   explicit subshell?)
+
+   Should execute() also save the current shell options ($-) of its subshell,
+   when finishing execution. -- This would presumably be done in the `trap` of
+   the subshell invoked by execute().
+** TODO Add test cases which run under `set -e`
+   Each function should be tested with the shell option `-e` set. Test should
+   verify both that each function work as expected, but also that the shell
+   option isn't modified in the global scope.
+
+   NOTE: Some Dashtap functions are probably broken under `set -e`. Since using
+   `&&` at the end of a function, when the condition evaluates as false will
+   cause a function to abort if `set -e` is in effect.
 ** TODO Tests should use 'title'
 ** TODO 'dashtap-todo.t' and 'dashtap-skip.t' should be very similar
    Currently there is some testing of ' and " in one of them.
