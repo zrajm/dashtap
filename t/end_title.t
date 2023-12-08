@@ -24,9 +24,10 @@ STDERR="end_title: No args allowed
     dashtap_init
     trap 'echo EXIT >&3' 0
     title "Test title"
-    end_title ARG
+    end_title ARG; RC="$?"
     trap - 0
     echo FULL >&3
+    exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
@@ -44,10 +45,11 @@ STDERR="end_title: Title not set
     unset BAIL_ON_FAIL DIE_ON_FAIL
     dashtap_init
     trap 'echo EXIT >&3' 0
-    end_title
+    end_title; RC="$?"
     fail "Test description"
     trap - 0
     echo FULL >&3
+    exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          255         "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
@@ -70,10 +72,11 @@ STDERR="
     dashtap_init
     trap 'echo EXIT >&3' 0
     title "Test title"
-    end_title
+    end_title; RC="$?"
     fail "Test description"
     trap - 0
     echo FULL >&3
+    exit "$RC"
 ) >out 2>err 3>trap; RC="$?"
 is  "$RC"          0           "Exit status"
 is  "$(dot err)"   "$STDERR."  "Standard error"
