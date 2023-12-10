@@ -1,7 +1,6 @@
 -*- org -*-
 
 * [0/14] `dashtap.sh` program
-** TODO Add init function for creating (optional) tempdir
 ** TODO Dashtap init function creating (optional) tempdir
    This should be used by both Fix and Docoptz tests. It needs to easily create
    a dir and cd to it.
