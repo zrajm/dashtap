@@ -1,6 +1,32 @@
 -*- org -*-
 
-* [0/13] `dashtap.sh` program
+* [0/14] `dashtap.sh` program
+** TODO Add init function for creating (optional) tempdir
+** TODO Dashtap init function creating (optional) tempdir
+   This should be used by both Fix and Docoptz tests. It needs to easily create
+   a dir and cd to it.
+
+   Maybe a test suite should create one tempdir, and then add subsequent tests
+   to directories inside that directory?
+
+   Maybe rewrite Dashtap's `test_init()` function?
+
+   This function should create (and maybe cleanup?) tempdir for test output.
+   (Exiting should be very careful to test that tempdir actually exists before
+   attempting to delete it -- also avoid deleting if tests fails, to leave
+   artifacts for user examination.)
+
+       ---------------------------------------------------------------
+       init_test() {
+           TMPDIR="$(mktemp -dt "docoptz-${0##*/}-XXXXXX")" \
+               || BAIL_OUT 'Cannot create tempdir'
+
+           trap "[ -d '$TMPDIR' ] && rm -r '$TMPDIR'" EXIT
+       }
+       ---------------------------------------------------------------
+
+   Hmm... Maybe even create just one directory when initializing Dashtap? And
+   then create subdirectories for each specific test?
 ** TODO Remove `fix.sh` specific functions in `dashtap.sh`
    E.g. init_test(), and maybe cpdir(), mkmetadata()... are there more?
 
